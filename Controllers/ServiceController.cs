@@ -9,29 +9,35 @@ namespace GoldGymAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")] // Prefix with "api/" if that's your desired routing structure
-    public class ServiceController : ControllerBase
+    public class ServiceController(GoldGymContext context) : ControllerBase
     {
-        private readonly GoldGymContext _context;
-
         // Add a constructor to inject the context
-        public ServiceController(GoldGymContext context)
-        {
-            _context = context;
-        }
 
         // GET: api/Service
         [HttpGet]
         public async Task<List<Service>> Get()
         {
-            return await _context.Services.ToListAsync();
+            return await context.Services.ToListAsync();
         }
 
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Service>> Get(int id)
+        {
+            var service = await context.Services.FindAsync(id);
+            if (service == null)
+            {
+                return NotFound();
+            }
+
+            return service;
+        }
+        
         // POST: api/Service
         [HttpPost]
         public async Task<ActionResult<Service>> PostService(Service service)
         {
-            _context.Services.Add(service);
-            await _context.SaveChangesAsync();
+            context.Services.Add(service);
+            await context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(Get), new { id = service.Id }, service);
         }
@@ -45,11 +51,11 @@ namespace GoldGymAPI.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(service).State = EntityState.Modified;
+            context.Entry(service).State = EntityState.Modified;
 
             try
             {
-                await _context.SaveChangesAsync();
+                await context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -67,21 +73,21 @@ namespace GoldGymAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteService(int id) // Changed from DeleteProduct to DeleteService
         {
-            var service = await _context.Services.FindAsync(id);
+            var service = await context.Services.FindAsync(id);
             if (service == null)
             {
                 return NotFound();
             }
 
-            _context.Services.Remove(service);
-            await _context.SaveChangesAsync();
+            context.Services.Remove(service);
+            await context.SaveChangesAsync();
 
             return NoContent();
         }
 
         private bool ServiceExists(int id) // Changed from ProductExists to ServiceExists
         {
-            return _context.Services.Any(e => e.Id == id);
+            return context.Services.Any(e => e.Id == id);
         }
     }
 }

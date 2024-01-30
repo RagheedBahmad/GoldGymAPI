@@ -1,68 +1,87 @@
-﻿using Microsoft.AspNetCore.Mvc;
-namespace GoldGymAPI.Controllers;
+﻿using GoldGymAPI.Models;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using GoldGymAPI.Models; // Use the correct namespace where your models are defined
 using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks;
+// Use the correct namespace where your models are defined
 
-[ApiController]
-[Route("[controller]")] // This sets up the base route for this controller
-public class ServiceController(GoldGymContext context) : ControllerBase
+// Make sure this is the correct namespace for your GoldGymContext
+
+namespace GoldGymAPI.Controllers
 {
-    // Add action methods here
-    public async Task<ActionResult<IEnumerable<Service>>> GetServices()
+    [ApiController]
+    [Route("api/[controller]")] // Prefix with "api/" if that's your desired routing structure
+    public class ServiceController : ControllerBase
     {
-        return await context.Services.ToListAsync();
-    }
-    
-    [HttpPut("{id}")]
-    public async Task<IActionResult> PutProduct(int id, Service service)
-    {
-        if (id != service.Id)
+        private readonly GoldGymContext _context;
+
+        // Add a constructor to inject the context
+        public ServiceController(GoldGymContext context)
         {
-            return BadRequest();
+            _context = context;
         }
 
-        context.Entry(service).State = EntityState.Modified;
-
-        try
+        // GET: api/Service
+        [HttpGet]
+        public async Task<List<Service>> Get()
         {
-            await context.SaveChangesAsync();
+            return await _context.Services.ToListAsync();
         }
-        catch (DbUpdateConcurrencyException)
+
+        // POST: api/Service
+        [HttpPost]
+        public async Task<ActionResult<Service>> PostService(Service service)
         {
-            if (!ProductExists(id))
+            _context.Services.Add(service);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(Get), new { id = service.Id }, service);
+        }
+
+        // PUT: api/Service/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutService(int id, Service service)
+        {
+            if (id != service.Id)
+            {
+                return BadRequest();
+            }
+
+            _context.Entry(service).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ServiceExists(id)) // Changed from ProductExists to ServiceExists
+                {
+                    return NotFound();
+                }
+                throw;
+            }
+
+            return NoContent();
+        }
+
+        // DELETE: api/Service/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteService(int id) // Changed from DeleteProduct to DeleteService
+        {
+            var service = await _context.Services.FindAsync(id);
+            if (service == null)
             {
                 return NotFound();
             }
-            else
-            {
-                throw;
-            }
+
+            _context.Services.Remove(service);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
 
-        return NoContent();
-    }
-    // DELETE: api/Product/5
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteProduct(int id)
-    {
-        var product = await context.Services.FindAsync(id);
-        if (product == null)
+        private bool ServiceExists(int id) // Changed from ProductExists to ServiceExists
         {
-            return NotFound();
+            return _context.Services.Any(e => e.Id == id);
         }
-
-        context.Services.Remove(product);
-        await context.SaveChangesAsync();
-
-        return NoContent();
     }
-
-    private bool ProductExists(int id)
-    {
-        return context.Services.Any(e => e.Id == id);
-    }
-
 }

@@ -5,13 +5,27 @@ DotEnv.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add services to the container.
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")!.Replace("{Password}", Environment.GetEnvironmentVariable("DatabasePassword"));
+
 builder.Services.AddDbContext<GoldGymContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection") + $"Password={Environment.GetEnvironmentVariable("DB_PASSWORD")};"));
+    options.UseNpgsql(connectionString));
+
+System.Console.WriteLine(connectionString);
+
 
 var app = builder.Build();
+app.UseHttpsRedirection();
 
-// Configure the HTTP request pipeline and the rest of your app...
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
-app.Run();
 
 app.Run();

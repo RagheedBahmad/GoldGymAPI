@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 // Use the correct namespace where your models are defined
-
 // Make sure this is the correct namespace for your GoldGymContext
 
 namespace GoldGymAPI.Controllers
@@ -11,8 +10,22 @@ namespace GoldGymAPI.Controllers
     [Route("api/[controller]")]
     public class SubscriptionController(GoldGymContext context) : ControllerBase
     {
-        public async Task AddOrUpdateSubscription(int customerId, int serviceId, DateTime expiryDate)
+        [HttpPost]
+        public async Task<IActionResult> AddOrUpdateSubscription(int customerId, int serviceId, DateTime expiryDate)
         {
+            bool customerExists = await context.Customers.AnyAsync(c => c.Id == customerId);
+            if (!customerExists)
+            {
+                return NotFound($"Customer with ID {customerId} not found.");
+            }
+            
+            // Check if the service exists
+            bool serviceExists = await context.Services.AnyAsync(s => s.Id == serviceId);
+            if (!serviceExists)
+            {
+                return NotFound($"Service with ID {serviceId} not found.");
+            }
+            
             var subscription = await context.Subscriptions
                 .FirstOrDefaultAsync(s => s.CustomerId == customerId && s.ServiceId == serviceId);
 
@@ -37,6 +50,24 @@ namespace GoldGymAPI.Controllers
             }
 
             await context.SaveChangesAsync();
+            return Ok("Post Action Successful");
+        }
+        
+        [HttpDelete("{customerId}/{serviceId}")]
+        public async Task<IActionResult> DeleteSubscription(int customerId, int serviceId)
+        {
+            var subscription = await context.Subscriptions
+                .FirstOrDefaultAsync(s => s.CustomerId == customerId && s.ServiceId == serviceId);
+
+            if (subscription == null)
+            {
+                return NotFound("Subscription not found.");
+            }
+
+            context.Subscriptions.Remove(subscription);
+            await context.SaveChangesAsync();
+
+            return NoContent();
         }
 
     }

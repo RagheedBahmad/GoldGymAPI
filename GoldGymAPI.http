@@ -3,4 +3,5 @@
 GET {{GoldGymAPI_HostAddress}}/weatherforecast/
 Accept: application/json
 
-###
+## 
+ m

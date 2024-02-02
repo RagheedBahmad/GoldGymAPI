@@ -1,6 +1,5 @@
 ﻿using GoldGymAPI.Models.Batch_Requests;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 // Use the correct namespace where your models are defined
 
 // Make sure this is the correct namespace for your GoldGymContext
@@ -38,6 +37,7 @@ namespace GoldGymAPI.Controllers
 
             foreach (var customer in request.Customers)
             {
+                
                 context.Customers.Add(customer);
             }
 

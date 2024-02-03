@@ -6,5 +6,4 @@ public class Service
     public required String Name {get; set; }
     public int Price {get; set; }
     public int CustomerCount { get; set; } 
-    public ICollection<Subscription> Subscriptions { get; set; }
 }

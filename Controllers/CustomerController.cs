@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Runtime.InteropServices.JavaScript;
+using Microsoft.AspNetCore.Mvc;
 using GoldGymAPI.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,13 +28,39 @@ namespace GoldGymAPI.Controllers
             return service;
         }
         
-        [HttpPost]
-        public async Task<ActionResult<Customer>> PostCustomer(Customer employee)
+        /*[HttpPost]
+        public async Task<ActionResult<Customer>> PostCustomer(Customer customer)
         {
-            context.Customers.Add(employee);
+            context.Customers.Add(customer);
             await context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(Get), new { id = employee.Id }, employee);
+            return CreatedAtAction(nameof(Get), new { id = customer.Id }, customer);
+        }*/
+        
+        [HttpPost]
+        public async Task<ActionResult<Customer>> PostCustomerwithSubscription(Customer customer,[FromQuery] int[] id,[FromQuery] int[] months)
+        {
+            Console.WriteLine("IHHWRHIOQWHIORQIHWOHIQRWOHIQORWIHOQRWvb " + customer.Id);
+            var transaction = await context.Database.BeginTransactionAsync();
+            
+            context.Customers.Add(customer);
+            await context.SaveChangesAsync();
+            Console.WriteLine("IHHWRHIOQWHIORQIHWOHIQRWOHIQORWIHOQRWvb " + customer.Id);
+            int i = 0;
+            foreach (var service in id)
+            {
+                var subscription = new Subscription
+                {
+                    CustomerId = customer.Id,
+                    ServiceId = service,
+                    ExpiryDate = DateOnly.FromDateTime(DateTime.Now).AddMonths(months[i]),
+                };
+                context.Subscriptions.Add(subscription);
+                i++;
+            }
+            await context.SaveChangesAsync();
+            await transaction.CommitAsync();
+            return CreatedAtAction(nameof(Get), new { id = customer.Id }, customer);
         }
         
         [HttpPut("{id}")]

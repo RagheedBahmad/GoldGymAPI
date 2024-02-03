@@ -37,7 +37,6 @@ namespace GoldGymAPI.Controllers
 
             foreach (var customer in request.Customers)
             {
-                
                 context.Customers.Add(customer);
             }
 
